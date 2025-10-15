@@ -1,0 +1,32 @@
+:root{
+      --bg:#0f1724; --card:#0b1220; --muted:#9aa4b2; --accent:#6ee7b7; --accent-2:#60a5fa;
+      --glass: rgba(255,255,255,0.03);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;font-family:Inter,system-ui,"Segoe UI",Roboto,'Noto Sans Bengali',sans-serif;background:linear-gradient(180deg,#061021 0%,#071730 60%);color:#e6eef6}
+    a{color:var(--accent-2);text-decoration:none}
+    .wrap{max-width:900px;margin:32px auto;padding:20px}
+    header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
+    h1{margin:0;font-size:22px}
+    .lead{color:var(--muted);font-size:14px}
+    .btn,input,select{border:none;border-radius:8px;padding:10px 14px;background:var(--glass);color:inherit}
+    .btn.primary{background:linear-gradient(90deg,var(--accent),var(--accent-2));color:#062;font-weight:600;cursor:pointer}
+    .controls{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+    .list{display:flex;flex-direction:column;gap:10px;margin-top:18px}
+    .item{background:rgba(255,255,255,0.02);padding:14px;border-radius:10px;border:1px solid rgba(255,255,255,0.04);display:flex;justify-content:space-between;align-items:center;cursor:pointer}
+    .item:hover{background:rgba(255,255,255,0.04)}
+    .subject-info{flex:1}
+    .subject-info h3{margin:0;font-size:18px}
+    .subject-info p{margin:4px 0 0 0;color:var(--muted);font-size:13px}
+    .status{font-size:12px;padding:5px 8px;border-radius:6px}
+    .status.running{background:#10263a;color:#8bd3ff}
+    .status.closed{background:#0b2b1a;color:#8fffd4}
+    .status.revision-running{background:#1e3a8a;color:#93c5fd}
+    .status.revision-done{background:#166534;color:#86efac}
+    .modal-backdrop{position:fixed;inset:0;background:rgba(2,6,23,0.6);display:none;align-items:center;justify-content:center;padding:20px;z-index:100}
+    .modal{width:100%;max-width:500px;background:linear-gradient(180deg,#061426,#071b2a);border-radius:12px;padding:16px}
+    .modal h2{margin-top:0}
+    textarea{width:100%;min-height:80px;border:none;border-radius:8px;padding:8px;background:rgba(255,255,255,0.03);color:inherit}
+    .import-export{display:flex;gap:10px;margin-top:10px}
+    .file-input{display:none}
+    @media(max-width:600px){h1{font-size:18px}}

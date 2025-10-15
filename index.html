@@ -1,13 +1,205 @@
 <!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>study-tracker</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+<html lang="bn">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Study Subject Tracker</title>
+  <style>
+    :root{
+      --bg:#0f1724; --card:#0b1220; --muted:#9aa4b2; --accent:#6ee7b7; --accent-2:#60a5fa;
+      --glass: rgba(255,255,255,0.03);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;font-family:Inter,system-ui,"Segoe UI",Roboto,'Noto Sans Bengali',sans-serif;background:linear-gradient(180deg,#061021 0%,#071730 60%);color:#e6eef6}
+    a{color:var(--accent-2);text-decoration:none}
+    .wrap{max-width:900px;margin:32px auto;padding:20px}
+    header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
+    h1{margin:0;font-size:22px}
+    .lead{color:var(--muted);font-size:14px}
+    .btn,input,select{border:none;border-radius:8px;padding:10px 14px;background:var(--glass);color:inherit}
+    .btn.primary{background:linear-gradient(90deg,var(--accent),var(--accent-2));color:#062;font-weight:600;cursor:pointer}
+    .controls{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+    .list{display:flex;flex-direction:column;gap:10px;margin-top:18px}
+    .item{background:rgba(255,255,255,0.02);padding:14px;border-radius:10px;border:1px solid rgba(255,255,255,0.04);display:flex;justify-content:space-between;align-items:center;cursor:pointer}
+    .item:hover{background:rgba(255,255,255,0.04)}
+    .subject-info{flex:1}
+    .subject-info h3{margin:0;font-size:18px}
+    .subject-info p{margin:4px 0 0 0;color:var(--muted);font-size:13px}
+    .status{font-size:12px;padding:5px 8px;border-radius:6px}
+    .status.running{background:#10263a;color:#8bd3ff}
+    .status.closed{background:#0b2b1a;color:#8fffd4}
+    .status.revision-running{background:#1e3a8a;color:#93c5fd}
+    .status.revision-done{background:#166534;color:#86efac}
+    .modal-backdrop{position:fixed;inset:0;background:rgba(2,6,23,0.6);display:none;align-items:center;justify-content:center;padding:20px;z-index:100}
+    .modal{width:100%;max-width:500px;background:linear-gradient(180deg,#061426,#071b2a);border-radius:12px;padding:16px}
+    .modal h2{margin-top:0}
+    textarea{width:100%;min-height:80px;border:none;border-radius:8px;padding:8px;background:rgba(255,255,255,0.03);color:inherit}
+    .import-export{display:flex;gap:10px;margin-top:10px}
+    .file-input{display:none}
+    @media(max-width:600px){h1{font-size:18px}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <h1>Study Subjects Tracker</h1>
+        <div class="lead">সব বিষয় এক জায়গায় — ডেটা স্ট্রাকচার, অ্যালগরিদম, ল্যাঙ্গুয়েজ, ফ্রেমওয়ার্ক ইত্যাদি</div>
+      </div>
+      <div style="display:flex;gap:10px">
+        <button class="btn primary" id="exportBtn">Export JSON</button>
+        <label for="importFile" class="btn primary">Import JSON</label>
+        <input type="file" id="importFile" accept=".json" class="file-input">
+        <button class="btn primary" id="addBtn">নতুন বিষয় যোগ করুন</button>
+      </div>
+    </header>
+    <div class="controls">
+      <input type="search" id="q" placeholder="Search subjects..." />
+      <select id="filterStatus">
+        <option value="all">সব</option>
+        <option value="running">চলমান</option>
+        <option value="closed">সম্পন্ন</option>
+        <option value="revision-running">রিভিশন চলমান</option>
+        <option value="revision-done">রিভিশন সম্পন্ন</option>
+      </select>
+    </div>
+    <div class="list" id="list"></div>
+    <footer style="margin-top:20px;color:var(--muted);font-size:13px">কোনো বিষয়ের উপর ক্লিক করলে সেই বিষয়ের বিস্তারিত Activity Tracker পেইজ খুলবে।</footer>
+  </div>
+  <!-- Modal -->
+  <div class="modal-backdrop" id="modal">
+    <div class="modal">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <h2 id="modalTitle">নতুন বিষয়</h2>
+        <button id="closeModal">✕</button>
+      </div>
+      <form id="subjectForm">
+        <label>বিষয়ের নাম</label>
+        <input name="title" required placeholder="যেমন: Data Structures & Algorithms" style="width:100%;margin-top:6px" />
+        <label style="margin-top:8px;display:block">বর্ণনা</label>
+        <textarea name="desc" placeholder="কেন শিখছেন, কী শিখবেন ইত্যাদি"></textarea>
+        <label style="margin-top:8px;display:block">Status</label>
+        <select name="status">
+          <option value="running">চলমান</option>
+          <option value="closed">সম্পন্ন</option>
+          <option value="revision-running">রিভিশন চলমান</option>
+          <option value="revision-done">রিভিশন সম্পন্ন</option>
+        </select>
+        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
+          <button type="button" id="deleteBtn" style="display:none">Delete</button>
+          <button type="submit" class="btn primary">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  <script>
+    const STORAGE_KEY = 'study-tracker';
+    const sampleSubjects = [
+      {id:genId(), title:'Data Structures & Algorithms', desc:'কোর্স, রিভিউ, প্র্যাকটিস এবং প্রজেক্ট ট্র্যাক করুন।', status:'running', entries:[]},
+      {id:genId(), title:'JavaScript', desc:'ES6, DOM, Async, Project track page', status:'closed', entries:[]},
+      {id:genId(), title:'React', desc:'Hooks, Components, State management শেখা', status:'running', entries:[]},
+      {id:genId(), title:'Operating System', desc:'Process, Thread, Scheduling topics.', status:'running', entries:[]}
+    ];
+    function genId(){return 'id-'+Math.random().toString(36).slice(2,9)}
+    function load(){ 
+      const raw=localStorage.getItem(STORAGE_KEY); 
+      if(!raw){localStorage.setItem(STORAGE_KEY,JSON.stringify(sampleSubjects));return sampleSubjects;} 
+      try{return JSON.parse(raw)}catch(e){return sampleSubjects} 
+    }
+    function save(d){localStorage.setItem(STORAGE_KEY,JSON.stringify(d))}
+    let subjects=load();
+    const listEl=document.getElementById('list');
+    const qEl=document.getElementById('q');
+    const filterEl=document.getElementById('filterStatus');
+    const modal=document.getElementById('modal');
+    const addBtn=document.getElementById('addBtn');
+    const closeModal=document.getElementById('closeModal');
+    const form=document.getElementById('subjectForm');
+    const modalTitle=document.getElementById('modalTitle');
+    const deleteBtn=document.getElementById('deleteBtn');
+    const exportBtn=document.getElementById('exportBtn');
+    const importFile=document.getElementById('importFile');
+    let selectedId=null;
+    function render(){
+      let items=[...subjects];
+      const q=qEl.value.trim().toLowerCase();
+      const f=filterEl.value;
+      if(q) items=items.filter(x=>x.title.toLowerCase().includes(q)||x.desc.toLowerCase().includes(q));
+      if(f!=='all') items=items.filter(x=>x.status===f);
+      listEl.innerHTML=items.map(x=>`
+        <div class="item" data-id="${x.id}">
+          <div class="subject-info">
+            <h3>${escapeHtml(x.title)}</h3>
+            <p>${escapeHtml(x.desc)}</p>
+          </div>
+          <div class="status ${x.status}">${getStatusLabel(x.status)}</div>
+        </div>`).join('');
+      document.querySelectorAll('.item').forEach(el=>{
+        el.addEventListener('click',()=>{
+          const id=el.getAttribute('data-id');
+          const subj=subjects.find(s=>s.id===id);
+          if(!subj) return;
+          window.open(`subject.html?subject=${encodeURIComponent(subj.id)}`,'_blank');
+        });
+      });
+    }
+    function getStatusLabel(s){
+      const labels={running:'চলমান', closed:'সম্পন্ন', 'revision-running':'রিভিশন চলমান', 'revision-done':'রিভিশন সম্পন্ন'};
+      return labels[s] || s.toUpperCase();
+    }
+    function openModal(id){
+      modal.style.display='flex';
+      if(id){
+        const s=subjects.find(x=>x.id===id);
+        modalTitle.textContent='বিষয় সম্পাদনা';
+        deleteBtn.style.display='inline-block';
+        form.title.value=s.title;form.desc.value=s.desc;form.status.value=s.status;
+        deleteBtn.onclick=()=>{if(confirm('মুছে ফেলতে চান?')){subjects=subjects.filter(x=>x.id!==id);save(subjects);render();closeM();}};
+        form.onsubmit=e=>{e.preventDefault();s.title=form.title.value;s.desc=form.desc.value;s.status=form.status.value;save(subjects);render();closeM();};
+      } else {
+        modalTitle.textContent='নতুন বিষয়';
+        deleteBtn.style.display='none';
+        form.reset();
+        form.onsubmit=e=>{e.preventDefault();const n={id:genId(),title:form.title.value,desc:form.desc.value,status:form.status.value,entries:[]};subjects.unshift(n);save(subjects);render();closeM();};
+      }
+    }
+    function closeM(){modal.style.display='none'}
+    addBtn.addEventListener('click',()=>openModal());
+    closeModal.addEventListener('click',closeM);
+    qEl.addEventListener('input',render);
+    filterEl.addEventListener('change',render);
+    exportBtn.addEventListener('click',()=>{
+      const dataStr = JSON.stringify(subjects, null, 2);
+      const dataBlob = new Blob([dataStr], {type:'application/json'});
+      const url = URL.createObjectURL(dataBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'study-tracker.json';
+      link.click();
+    });
+    importFile.addEventListener('change', (e)=>{
+      const file = e.target.files[0];
+      if(!file) return;
+      const reader = new FileReader();
+      reader.onload = (e)=>{
+        try{
+          const imported = JSON.parse(e.target.result);
+          if(Array.isArray(imported)){
+            subjects = imported;
+            save(subjects);
+            render();
+            alert('Imported successfully!');
+          } else {
+            alert('Invalid JSON: Must be an array of subjects.');
+          }
+        } catch(err){
+          alert('Invalid JSON: ' + err.message);
+        }
+      };
+      reader.readAsText(file);
+    });
+    function escapeHtml(s){return s.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;')}
+    render();
+  </script>
+</body>
 </html>

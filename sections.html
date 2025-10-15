@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="bn">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Sections Tracker</title>
+  <style>
+    /* Same styles as subject.html, copied for independence */
+    :root{
+      --bg:#0f1724; --card:#0b1220; --muted:#9aa4b2; --accent:#6ee7b7; --accent-2:#60a5fa;
+      --glass: rgba(255,255,255,0.03);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, 'Noto Sans Bengali', sans-serif;background:linear-gradient(180deg,#061021 0%, #071730 60%);color:#e6eef6}
+    a{color:var(--accent-2)}
+    .wrap{max-width:1100px;margin:28px auto;padding:20px}
+    header{display:flex;gap:16px;align-items:center;justify-content:space-between}
+    .brand{display:flex;gap:12px;align-items:center}
+    .logo{width:48px;height:48px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:flex;align-items:center;justify-content:center;color:#032; font-weight:700}
+    h1{margin:0;font-size:20px}
+    p.lead{margin:0;color:var(--muted);font-size:13px}
+    .controls{display:flex;gap:12px;align-items:center;margin-top:18px;flex-wrap:wrap}
+    .search{flex:1;min-width:220px}
+    input,select,button{background:var(--glass);border:1px solid rgba(255,255,255,0.04);padding:10px 12px;border-radius:10px;color:inherit}
+    .btn{cursor:pointer}
+    .btn.primary{background:linear-gradient(90deg,var(--accent),var(--accent-2));color:#062;box-shadow:0 6px 20px rgba(96,165,250,0.08);border:none}
+    .grid{display:grid;grid-template-columns:1fr 360px;gap:18px;margin-top:18px}
+    .panel{background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent);border-radius:12px;padding:14px;box-shadow:0 6px 30px rgba(2,6,23,0.6);border:1px solid rgba(255,255,255,0.02)}
+    .list{display:flex;flex-direction:column;gap:10px}
+    .item{display:flex;gap:12px;align-items:flex-start;padding:12px;border-radius:10px;background:rgba(255,255,255,0.01);border:1px solid rgba(255,255,255,0.02);cursor:pointer}
+    .item .meta{flex:1}
+    .item .title{font-weight:600;margin-bottom:6px}
+    .tags{display:flex;gap:6px;flex-wrap:wrap}
+    .tag{font-size:12px;padding:4px 8px;border-radius:999px;background:rgba(255,255,255,0.03);color:var(--muted)}
+    .status{font-size:12px;padding:6px 8px;border-radius:8px}
+    .status.running{background:#10263a;color:#8bd3ff}
+    .status.closed{background:#0b2b1a;color:#8fffd4}
+    .status.revision-running{background:#1e3a8a;color:#93c5fd}
+    .status.revision-done{background:#166534;color:#86efac}
+    .open-btn{margin-top:8px}
+    .details h3{margin:0 0 6px 0}
+    .fields{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+    .field{font-size:13px;color:var(--muted)}
+    .notes{margin-top:12px;color:var(--muted);white-space:pre-wrap}
+    footer{margin-top:16px;color:var(--muted);font-size:13px}
+    .modal-backdrop{position:fixed;inset:0;background:rgba(2,6,23,0.6);display:none;align-items:center;justify-content:center;padding:20px}
+    .modal{width:100%;max-width:720px;background:linear-gradient(180deg,#061426,#071b2a);border-radius:12px;padding:16px}
+    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    textarea{min-height:110px;padding:10px;border-radius:8px}
+    .has-topics{margin-top:10px}
+    .topic-fields{display:none;gap:5px;flex-direction:column}
+    @media(max-width:920px){.grid{grid-template-columns:1fr;}.brand h1{font-size:18px}}
+    .muted{color:var(--muted);font-size:13px}
+    .row{display:flex;gap:8px;align-items:center}
+    .small{font-size:13px}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="brand">
+        <div class="logo" id="logo">ST</div>
+        <div>
+          <h1 id="pageTitle">Sections Tracker</h1>
+          <p class="lead" id="pageDesc">Sections and topics tracking.</p>
+        </div>
+      </div>
+      <div class="row">
+        <button class="btn primary" id="addBtn">নতুন সেকশন যোগ করুন</button>
+      </div>
+    </header>
+    <div class="controls">
+      <input type="search" id="q" placeholder="Search sections..." class="search" />
+      <select id="filterStatus">
+        <option value="all">সব অবস্থা</option>
+        <option value="running">চলমান</option>
+        <option value="closed">সম্পন্ন</option>
+        <option value="revision-running">রিভিশন চলমান</option>
+        <option value="revision-done">রিভিশন সম্পন্ন</option>
+      </select>
+      <select id="sortBy">
+        <option value="updated">সর্বশেষ আপডেট</option>
+        <option value="start">শুরু তারিখ</option>
+        <option value="doneDate">সমাপ্তির তারিখ</option>
+      </select>
+    </div>
+    <div class="grid">
+      <div class="panel">
+        <div class="list" id="list"></div>
+        <footer>কোনো সেকশনের উপর ক্লিক করে ডান দিকের প্যানেলে বিস্তারিত দেখুন। যদি টপিক থাকে তাহলে Open বাটনে ক্লিক করুন।</footer>
+      </div>
+      <aside class="panel details" id="details">
+        <h3>নির্বাচিত সেকশন নেই</h3>
+        <p class="muted">কোনো আইটেম নির্বাচন করুন।</p>
+      </aside>
+    </div>
+    <!-- Modal -->
+    <div class="modal-backdrop" id="modal">
+      <div class="modal">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <strong id="modalTitle">নতুন সেকশন</strong>
+          <button id="closeModal">✕</button>
+        </div>
+        <form id="sectionForm">
+          <div class="form-grid">
+            <div>
+              <label>Title</label>
+              <input name="title" required placeholder="Section title" />
+            </div>
+            <div>
+              <label>Start Date</label>
+              <input type="date" name="startDate" />
+            </div>
+            <div>
+              <label>Completed Date</label>
+              <input type="date" name="doneDate" />
+            </div>
+          </div>
+          <div class="has-topics">
+            <label><input type="checkbox" name="hasTopics" /> Has Topics?</label>
+            <div class="topic-fields">
+              <label>Number of Topics:</label>
+              <input type="number" id="numTopics" min="1" max="20" value="1" />
+              <div id="topicNameFields"></div>
+            </div>
+          </div>
+          <div style="margin-top:10px">
+            <label>Notes</label>
+            <textarea name="notes" placeholder="Section notes"></textarea>
+          </div>
+          <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
+            <button type="button" id="deleteBtn" style="display:none">Delete</button>
+            <button type="submit" class="btn primary">Save</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const subjectId = urlParams.get('subject');
+    const entryId = urlParams.get('entry');
+    const STORAGE_KEY = 'study-tracker';
+    const allData = load();
+    const subject = allData.find(s => s.id === subjectId);
+    const entry = subject.entries.find(e => e.id === entryId);
+    if(!entry || !entry.sections){
+      document.body.innerHTML = '<h1 style="text-align:center;color:var(--muted);">Invalid entry or no sections.</h1>';
+    }
+    document.getElementById('logo').textContent = entry.title.charAt(0);
+    document.getElementById('pageTitle').textContent = `Sections — ${entry.title}`;
+    let data = entry.sections || [];
+    let selectedId = null;
+    // Similar refs and functions as subject.html, adapted for sections
+    const listEl = document.getElementById('list');
+    const detailsEl = document.getElementById('details');
+    const qEl = document.getElementById('q');
+    const filterStatusEl = document.getElementById('filterStatus');
+    const sortByEl = document.getElementById('sortBy');
+    const modal = document.getElementById('modal');
+    const addBtn = document.getElementById('addBtn');
+    const closeModal = document.getElementById('closeModal');
+    const sectionForm = document.getElementById('sectionForm');
+    const modalTitle = document.getElementById('modalTitle');
+    const deleteBtn = document.getElementById('deleteBtn');
+    const hasTopicsCb = sectionForm.querySelector('[name="hasTopics"]');
+    const numTopicsInput = document.getElementById('numTopics');
+    const topicNameFields = document.getElementById('topicNameFields');
+    function updateTopicFields(){
+      const has = hasTopicsCb.checked;
+      const num = parseInt(numTopicsInput.value) || 1;
+      topicNameFields.innerHTML = '';
+      if(!has) return;
+      for(let i=1; i<=num; i++){
+        const div = document.createElement('div');
+        div.innerHTML = `<label>Topic ${i} Name:</label><input name="topic${i}" placeholder="Topic ${i} title" />`;
+        topicNameFields.appendChild(div);
+      }
+    }
+    hasTopicsCb.addEventListener('change', updateTopicFields);
+    numTopicsInput.addEventListener('input', updateTopicFields);
+    function renderList(){
+      // Similar to renderList in subject.html, but for sections, and open to topics.html
+      const q = qEl.value.trim().toLowerCase();
+      const statusF = filterStatusEl.value;
+      const sortBy = sortByEl.value;
+      let items = [...data];
+      if(statusF!=='all') items = items.filter(i=>i.status===statusF);
+      if(q) items = items.filter(i=> (i.title||'').toLowerCase().includes(q) || (i.notes||'').toLowerCase().includes(q) );
+      // sort similar
+      if(sortBy==='updated') items.sort((a,b)=> (b.updated||0)-(a.updated||0));
+      if(sortBy==='start') items.sort((a,b)=> new Date(b.startDate||0)-new Date(a.startDate||0));
+      if(sortBy==='doneDate') items.sort((a,b)=> new Date(b.doneDate||0)-new Date(a.doneDate||0));
+      listEl.innerHTML = items.map(i=>{
+        const statusClass = i.status === 'closed' ? 'closed' : i.status === 'revision-running' ? 'revision-running' : i.status === 'revision-done' ? 'revision-done' : 'running';
+        const label = getStatusLabel(i.status);
+        return `
+          <div class="item" data-id="${i.id}">
+            <div class="meta">
+              <div class="title">${escapeHtml(i.title)}</div>
+              <div class="tags">
+                <div class="tag">Start: ${i.startDate||'—'}</div>
+                <div class="tag">Done: ${i.doneDate||'—'}</div>
+              </div>
+            </div>
+            <div style="text-align:right;min-width:86px">
+              <div class="status ${statusClass}">${label}</div>
+              ${i.topics ? `<button class="btn open-btn primary" data-id="${i.id}">Open Topics</button>` : ''}
+              <div style="margin-top:8px;font-size:12px;color:var(--muted)">${timeAgo(i.updated)}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+      document.querySelectorAll('.item').forEach(el=>{
+        el.addEventListener('click',(e)=>{
+          if(e.target.classList.contains('open-btn')) return;
+          const id = el.getAttribute('data-id');
+          selectedId = id;
+          showOverview(id);
+        });
+      });
+      document.querySelectorAll('.open-btn').forEach(btn=>{
+        btn.addEventListener('click',()=>{
+          const id = btn.getAttribute('data-id');
+          const sec = data.find(d=>d.id===id);
+          if(sec.topics){
+            window.open(`topics.html?subject=${subjectId}&entry=${entryId}&section=${id}`,'_blank');
+          }
+        });
+      });
+      if(items.length===0) listEl.innerHTML = '<div class="muted">কোনো সেকশন নেই।</div>';
+    }
+    function showOverview(id){
+      const it = data.find(d=>d.id===id);
+      if(!it) return;
+      const statusClass = it.status === 'closed' ? 'closed' : it.status === 'revision-running' ? 'revision-running' : it.status === 'revision-done' ? 'revision-done' : 'running';
+      const label = getStatusLabel(it.status);
+      let topicsInfo = '';
+      if(it.topics && it.topics.length > 0){
+        const completeTopics = it.topics.filter(t => t.status === 'closed' || t.status === 'revision-done').length;
+        const totalTopics = it.topics.length;
+        const topicStatus = totalTopics === completeTopics ? 'closed' : 'running';
+        topicsInfo = `<p><strong>Topics:</strong> ${completeTopics}/${totalTopics} complete. Overall: <span class="status ${topicStatus}">${getStatusLabel(topicStatus)}</span></p>`;
+      }
+      detailsEl.innerHTML = `
+        <h3>${escapeHtml(it.title)}</h3>
+        <div class="fields">
+          <div class="field"><strong>Start</strong><div class="muted">${it.startDate||'—'}</div></div>
+          <div class="field"><strong>Completed</strong><div class="muted">${it.doneDate||'—'}</div></div>
+        </div>
+        ${topicsInfo}
+        <div style="margin-top:10px" class="notes"><strong>Notes:</strong>\n${escapeHtml(it.notes||'—')}</div>
+        <div style="margin-top:12px;display:flex;gap:8px;justify-content:flex-end">
+          <button class="btn" id="editBtn">Edit</button>
+          <button class="btn" id="markBtn">${label === 'সম্পন্ন' || label === 'রিভিশন সম্পন্ন' ? 'Mark Running' : 'Mark Closed'}</button>
+        </div>
+      `;
+      // Similar event listeners for edit and mark
+      document.getElementById('editBtn').addEventListener('click',()=>openModalFor(it.id));
+      document.getElementById('markBtn').addEventListener('click',()=>{
+        const currentStatus = it.status;
+        if(currentStatus === 'closed' || currentStatus === 'revision-done'){
+          it.status = 'running';
+        } else {
+          it.status = 'closed';
+        }
+        it.updated = Date.now();
+        entry.sections = data;
+        save(allData);
+        renderList();
+        showOverview(it.id);
+      });
+    }
+    function openModalFor(id){
+      // Similar to subject.html, but for sections, create topics array if checked
+      modal.style.display='flex';
+      updateTopicFields();
+      // ... (fill form, onsubmit create/update section with topics)
+      // On save, update entry.sections = data; save(allData);
+    }
+    // Events similar
+    addBtn.addEventListener('click', ()=>openModalFor());
+    closeModal.addEventListener('click', () => { modal.style.display='none'; });
+    qEl.addEventListener('input', renderList);
+    filterStatusEl.addEventListener('change', renderList);
+    sortByEl.addEventListener('change', renderList);
+    function getStatusLabel(s){ /* same */ }
+    function timeAgo(ts){ /* same */ }
+    function escapeHtml(str){ /* same */ }
+    function load(){ /* same */ }
+    function save(data){ /* same */ }
+    // initial
+    renderList();
+  </script>
+</body>
+</html>

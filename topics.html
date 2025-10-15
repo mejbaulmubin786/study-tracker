@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="bn">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Topics Tracker</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="brand">
+        <div class="logo" id="logo">TT</div>
+        <div>
+          <h1 id="pageTitle">Topics Tracker</h1>
+          <p class="lead" id="pageDesc">Final level topics with status and revisions.</p>
+        </div>
+      </div>
+      <div class="row">
+        <button class="btn primary" id="addBtn">নতুন টপিক যোগ করুন</button>
+      </div>
+    </header>
+    <div class="controls">
+      <input type="search" id="q" placeholder="Search topics..." class="search" />
+      <select id="filterStatus">
+        <option value="all">সব</option>
+        <option value="running">চলমান</option>
+        <option value="closed">সম্পন্ন</option>
+        <option value="revision-running">রিভিশন চলমান</option>
+        <option value="revision-done">রিভিশন সম্পন্ন</option>
+      </select>
+    </div>
+    <div class="grid">
+      <div class="panel">
+        <div class="list" id="list"></div>
+        <footer>ক্লিক করে স্ট্যাটাস দেখুন এবং এডিট করুন।</footer>
+      </div>
+      <aside class="panel details" id="details">
+        <h3>নির্বাচিত টপিক নেই</h3>
+        <p class="muted">কোনো টপিক নির্বাচন করুন।</p>
+      </aside>
+    </div>
+    <!-- Modal for topic: title, start, done, revisions array (dates), notes, status -->
+    <div class="modal-backdrop" id="modal">
+      <div class="modal">
+        <!-- Form with revisions: textarea for comma-separated dates or add button for multiple -->
+        <form id="topicForm">
+          <!-- fields for title, dates, status, notes, revisions -->
+          <div>
+            <label>Revisions (comma separated dates)</label>
+            <textarea name="revisions" placeholder="2025-01-01, 2025-02-01"></textarea>
+          </div>
+          <!-- ... -->
+        </form>
+      </div>
+    </div>
+  </div>
+  <script>
+    // Similar structure, but for topics: no further open, click shows status in side.
+    // Data: entry.sections.find(s => s.id === sectionId).topics
+    // On click item: show details with revisions list, edit status.
+    // Add: no has sub, but revisions as array of dates.
+    // Save updates the chain: section.topics = data; entry.sections updated; subject.entries updated; save(allData);
+    // No open button, just status update propagates up if all complete.
+    // For propagation: after save, can reload parent windows or just local.
+    // Since local, no auto propagate, user can refresh parents.
+    // Initial render similar, but no open-btn.
+    // In showOverview: list revisions as tags or list, button to add revision date.
+    // Status based on doneDate and last revision.
+    // If doneDate and recent revision, revision-done etc.
+    // But simple: user sets status manually.
+    // Full implementation similar to previous, adapted.
+  </script>
+</body>
+</html>
