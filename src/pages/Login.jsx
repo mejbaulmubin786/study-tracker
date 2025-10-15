@@ -25,7 +25,7 @@ export default function Login({ onLogin }) {
                             <button type="button" className="btn" onClick={handleGoogle}>Google</button>
                         </div>
                     </form>
-                    <div className="text-sm text-slate-400 mt-3">Demo: you can create accounts in Firebase Auth for users.</div>
+                    {/* <div className="text-sm text-slate-400 mt-3">Demo: you can create accounts in Firebase Auth for users.</div> */}
                 </div>
             </div>
         </div>
