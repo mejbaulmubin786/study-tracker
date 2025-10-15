@@ -1,10 +1,59 @@
+```html
 <!doctype html>
 <html lang="bn">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Topics Tracker</title>
-  <link rel="stylesheet" href="./styles.css">
+  <style>
+    /* Same styles as sections.html */
+    :root{
+      --bg:#0f1724; --card:#0b1220; --muted:#9aa4b2; --accent:#6ee7b7; --accent-2:#60a5fa;
+      --glass: rgba(255,255,255,0.03);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, 'Noto Sans Bengali', sans-serif;background:linear-gradient(180deg,#061021 0%, #071730 60%);color:#e6eef6}
+    a{color:var(--accent-2)}
+    .wrap{max-width:1100px;margin:28px auto;padding:20px}
+    header{display:flex;gap:16px;align-items:center;justify-content:space-between}
+    .brand{display:flex;gap:12px;align-items:center}
+    .logo{width:48px;height:48px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:flex;align-items:center;justify-content:center;color:#032; font-weight:700}
+    h1{margin:0;font-size:20px}
+    p.lead{margin:0;color:var(--muted);font-size:13px}
+    .controls{display:flex;gap:12px;align-items:center;margin-top:18px;flex-wrap:wrap}
+    .search{flex:1;min-width:220px}
+    input,select,button{background:var(--glass);border:1px solid rgba(255,255,255,0.04);padding:10px 12px;border-radius:10px;color:inherit}
+    .btn{cursor:pointer}
+    .btn.primary{background:linear-gradient(90deg,var(--accent),var(--accent-2));color:#062;box-shadow:0 6px 20px rgba(96,165,250,0.08);border:none}
+    .grid{display:grid;grid-template-columns:1fr 360px;gap:18px;margin-top:18px}
+    .panel{background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent);border-radius:12px;padding:14px;box-shadow:0 6px 30px rgba(2,6,23,0.6);border:1px solid rgba(255,255,255,0.02)}
+    .list{display:flex;flex-direction:column;gap:10px}
+    .item{display:flex;gap:12px;align-items:flex-start;padding:12px;border-radius:10px;background:rgba(255,255,255,0.01);border:1px solid rgba(255,255,255,0.02);cursor:pointer}
+    .item .meta{flex:1}
+    .item .title{font-weight:600;margin-bottom:6px}
+    .tags{display:flex;gap:6px;flex-wrap:wrap}
+    .tag{font-size:12px;padding:4px 8px;border-radius:999px;background:rgba(255,255,255,0.03);color:var(--muted)}
+    .status{font-size:12px;padding:6px 8px;border-radius:8px}
+    .status.running{background:#10263a;color:#8bd3ff}
+    .status.closed{background:#0b2b1a;color:#8fffd4}
+    .status.revision-running{background:#1e3a8a;color:#93c5fd}
+    .status.revision-done{background:#166534;color:#86efac}
+    .details h3{margin:0 0 6px 0}
+    .fields{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+    .field{font-size:13px;color:var(--muted)}
+    .notes{margin-top:12px;color:var(--muted);white-space:pre-wrap}
+    .revisions-list{list-style:none;padding:0;margin:10px 0}
+    .revisions-list li{padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.1);font-size:13px}
+    footer{margin-top:16px;color:var(--muted);font-size:13px}
+    .modal-backdrop{position:fixed;inset:0;background:rgba(2,6,23,0.6);display:none;align-items:center;justify-content:center;padding:20px}
+    .modal{width:100%;max-width:720px;background:linear-gradient(180deg,#061426,#071b2a);border-radius:12px;padding:16px}
+    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    textarea{min-height:80px;padding:10px;border-radius:8px}
+    @media(max-width:920px){.grid{grid-template-columns:1fr;}.brand h1{font-size:18px}}
+    .muted{color:var(--muted);font-size:13px}
+    .row{display:flex;gap:8px;align-items:center}
+    .small{font-size:13px}
+  </style>
 </head>
 <body>
   <div class="wrap">
@@ -13,7 +62,7 @@
         <div class="logo" id="logo">TT</div>
         <div>
           <h1 id="pageTitle">Topics Tracker</h1>
-          <p class="lead" id="pageDesc">Final level topics with status and revisions.</p>
+          <p class="lead" id="pageDesc">ফাইনাল লেভেল টপিকস সাথে স্ট্যাটাস এবং রিভিশন ট্র্যাকিং।</p>
         </div>
       </div>
       <div class="row">
@@ -23,53 +72,303 @@
     <div class="controls">
       <input type="search" id="q" placeholder="Search topics..." class="search" />
       <select id="filterStatus">
-        <option value="all">সব</option>
+        <option value="all">সব অবস্থা</option>
         <option value="running">চলমান</option>
         <option value="closed">সম্পন্ন</option>
         <option value="revision-running">রিভিশন চলমান</option>
         <option value="revision-done">রিভিশন সম্পন্ন</option>
       </select>
+      <select id="sortBy">
+        <option value="updated">সর্বশেষ আপডেট</option>
+        <option value="start">শুরু তারিখ</option>
+        <option value="doneDate">সমাপ্তির তারিখ</option>
+      </select>
     </div>
     <div class="grid">
       <div class="panel">
         <div class="list" id="list"></div>
-        <footer>ক্লিক করে স্ট্যাটাস দেখুন এবং এডিট করুন।</footer>
+        <footer>কোনো টপিকের উপর ক্লিক করে ডান দিকের প্যানেলে বিস্তারিত দেখুন ও এডিট করুন।</footer>
       </div>
       <aside class="panel details" id="details">
         <h3>নির্বাচিত টপিক নেই</h3>
-        <p class="muted">কোনো টপিক নির্বাচন করুন।</p>
+        <p class="muted">কোনো টপিক নির্বাচন করুন তখন বিস্তারিত এখানে দেখাবে।</p>
       </aside>
     </div>
-    <!-- Modal for topic: title, start, done, revisions array (dates), notes, status -->
+    <!-- Modal: Add / Edit Topic -->
     <div class="modal-backdrop" id="modal">
       <div class="modal">
-        <!-- Form with revisions: textarea for comma-separated dates or add button for multiple -->
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <strong id="modalTitle">নতুন টপিক</strong>
+          <button id="closeModal">✕</button>
+        </div>
         <form id="topicForm">
-          <!-- fields for title, dates, status, notes, revisions -->
-          <div>
-            <label>Revisions (comma separated dates)</label>
-            <textarea name="revisions" placeholder="2025-01-01, 2025-02-01"></textarea>
+          <div class="form-grid">
+            <div>
+              <label>Title</label>
+              <input name="title" required placeholder="টপিকের নাম" />
+            </div>
+            <div>
+              <label>Start Date</label>
+              <input type="date" name="startDate" />
+            </div>
+            <div>
+              <label>Completed Date</label>
+              <input type="date" name="doneDate" />
+            </div>
+            <div>
+              <label>Status</label>
+              <select name="status">
+                <option value="running">চলমান</option>
+                <option value="closed">সম্পন্ন</option>
+                <option value="revision-running">রিভিশন চলমান</option>
+                <option value="revision-done">রিভিশন সম্পন্ন</option>
+              </select>
+            </div>
           </div>
-          <!-- ... -->
+          <div style="margin-top:10px">
+            <label>Notes</label>
+            <textarea name="notes" placeholder="টপিকের নোটস বা ডেসক্রিপশন"></textarea>
+          </div>
+          <div style="margin-top:10px">
+            <label>Revisions (comma separated dates, e.g., 2025-01-01, 2025-02-01)</label>
+            <textarea name="revisions" placeholder="রিভিশন ডেটস, কমা দিয়ে আলাদা করুন"></textarea>
+          </div>
+          <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
+            <button type="button" id="deleteBtn" style="display:none">Delete</button>
+            <button type="submit" class="btn primary">Save</button>
+          </div>
         </form>
       </div>
     </div>
   </div>
   <script>
-    // Similar structure, but for topics: no further open, click shows status in side.
-    // Data: entry.sections.find(s => s.id === sectionId).topics
-    // On click item: show details with revisions list, edit status.
-    // Add: no has sub, but revisions as array of dates.
-    // Save updates the chain: section.topics = data; entry.sections updated; subject.entries updated; save(allData);
-    // No open button, just status update propagates up if all complete.
-    // For propagation: after save, can reload parent windows or just local.
-    // Since local, no auto propagate, user can refresh parents.
-    // Initial render similar, but no open-btn.
-    // In showOverview: list revisions as tags or list, button to add revision date.
-    // Status based on doneDate and last revision.
-    // If doneDate and recent revision, revision-done etc.
-    // But simple: user sets status manually.
-    // Full implementation similar to previous, adapted.
+    // ------------------ Setup ------------------
+    const urlParams = new URLSearchParams(window.location.search);
+    const subjectId = urlParams.get('subject');
+    const entryId = urlParams.get('entry');
+    const sectionId = urlParams.get('section');
+    if(!subjectId || !entryId || !sectionId){
+      document.body.innerHTML = '<h1 style="text-align:center;color:var(--muted);">Invalid parameters. Go back to previous page.</h1>';
+    }
+    const STORAGE_KEY = 'study-tracker';
+    function genId(){return 'id-'+Math.random().toString(36).slice(2,9)}
+    function load(){
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if(!raw) return null;
+      try{ return JSON.parse(raw) }catch(e){ return null }
+    }
+    function save(data){ localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
+    const allData = load();
+    const subject = allData ? allData.find(s => s.id === subjectId) : null;
+    const entry = subject ? subject.entries.find(e => e.id === entryId) : null;
+    const section = entry && entry.sections ? entry.sections.find(s => s.id === sectionId) : null;
+    if(!section || !section.topics){
+      document.body.innerHTML = '<h1 style="text-align:center;color:var(--muted);">Section or topics not found.</h1>';
+    }
+    document.getElementById('logo').textContent = section.title.charAt(0);
+    document.getElementById('pageTitle').textContent = `Topics — ${section.title}`;
+    document.getElementById('pageDesc').textContent = 'টপিকস এবং রিভিশন ট্র্যাকিং।';
+    let data = section.topics || [];
+    let selectedId = null;
+    // ------------------ UI refs ------------------
+    const listEl = document.getElementById('list');
+    const detailsEl = document.getElementById('details');
+    const qEl = document.getElementById('q');
+    const filterStatusEl = document.getElementById('filterStatus');
+    const sortByEl = document.getElementById('sortBy');
+    // modal
+    const modal = document.getElementById('modal');
+    const addBtn = document.getElementById('addBtn');
+    const closeModal = document.getElementById('closeModal');
+    const topicForm = document.getElementById('topicForm');
+    const modalTitle = document.getElementById('modalTitle');
+    const deleteBtn = document.getElementById('deleteBtn');
+    // ------------------ render list ------------------
+    function renderList(){
+      const q = qEl.value.trim().toLowerCase();
+      const statusF = filterStatusEl.value;
+      const sortBy = sortByEl.value;
+      let items = [...data];
+      if(statusF!=='all') items = items.filter(i=>i.status===statusF);
+      if(q) items = items.filter(i=> (i.title||'').toLowerCase().includes(q) || (i.notes||'').toLowerCase().includes(q) );
+      if(sortBy==='updated') items.sort((a,b)=> (b.updated||0)-(a.updated||0));
+      if(sortBy==='start') items.sort((a,b)=> new Date(b.startDate||0)-new Date(a.startDate||0));
+      if(sortBy==='doneDate') items.sort((a,b)=> new Date(b.doneDate||0)-new Date(a.doneDate||0));
+      listEl.innerHTML = items.map(i=>{
+        const statusClass = i.status === 'closed' ? 'closed' : i.status === 'revision-running' ? 'revision-running' : i.status === 'revision-done' ? 'revision-done' : 'running';
+        const label = getStatusLabel(i.status);
+        return `
+          <div class="item" data-id="${i.id}">
+            <div class="meta">
+              <div class="title">${escapeHtml(i.title)}</div>
+              <div class="tags">
+                <div class="tag">Start: ${i.startDate||'—'}</div>
+                <div class="tag">Done: ${i.doneDate||'—'}</div>
+                ${i.revisions && i.revisions.length > 0 ? `<div class="tag">Revisions: ${i.revisions.length}</div>` : ''}
+              </div>
+            </div>
+            <div style="text-align:right;min-width:86px">
+              <div class="status ${statusClass}">${label}</div>
+              <div style="margin-top:8px;font-size:12px;color:var(--muted)">${timeAgo(i.updated)}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+      // attach click
+      document.querySelectorAll('.item').forEach(el=>{
+        el.addEventListener('click',()=>{
+          const id = el.getAttribute('data-id');
+          selectedId = id;
+          showDetails(id);
+        });
+      });
+      if(items.length===0) listEl.innerHTML = '<div class="muted">কোনো টপিক পাওয়া যায়নি — নতুন যোগ করুন।</div>';
+    }
+    function getStatusLabel(s){
+      const labels={running:'চলমান', closed:'সম্পন্ন', 'revision-running':'রিভিশন চলমান', 'revision-done':'রিভিশন সম্পন্ন'};
+      return labels[s] || s.toUpperCase();
+    }
+    // ------------------ details ------------------
+    function showDetails(id){
+      const it = data.find(d=>d.id===id);
+      if(!it) return;
+      const statusClass = it.status === 'closed' ? 'closed' : it.status === 'revision-running' ? 'revision-running' : it.status === 'revision-done' ? 'revision-done' : 'running';
+      const label = getStatusLabel(it.status);
+      let revisionsHtml = '';
+      if(it.revisions && it.revisions.length > 0){
+        revisionsHtml = `<ul class="revisions-list">${it.revisions.map(r => `<li>${escapeHtml(r)}</li>`).join('')}</ul>`;
+      } else {
+        revisionsHtml = '<p class="muted">কোনো রিভিশন নেই।</p>';
+      }
+      detailsEl.innerHTML = `
+        <h3>${escapeHtml(it.title)}</h3>
+        <div class="fields">
+          <div class="field"><strong>Start</strong><div class="muted">${it.startDate||'—'}</div></div>
+          <div class="field"><strong>Completed</strong><div class="muted">${it.doneDate||'—'}</div></div>
+        </div>
+        <div style="margin-top:10px">
+          <strong>Revisions:</strong>
+          ${revisionsHtml}
+        </div>
+        <div style="margin-top:10px" class="notes"><strong>Notes:</strong>\n${escapeHtml(it.notes||'—')}</div>
+        <div style="margin-top:12px;display:flex;gap:8px;justify-content:flex-end">
+          <button class="btn" id="editBtn">Edit</button>
+          <button class="btn" id="markBtn">${label === 'সম্পন্ন' || label === 'রিভিশন সম্পন্ন' ? 'Mark Running' : 'Mark Closed'}</button>
+        </div>
+      `;
+      document.getElementById('editBtn').addEventListener('click',()=>openModalFor(it.id));
+      document.getElementById('markBtn').addEventListener('click',()=>{
+        const currentStatus = it.status;
+        if(currentStatus === 'closed' || currentStatus === 'revision-done'){
+          it.status = 'running';
+        } else {
+          it.status = 'closed';
+        }
+        it.updated = Date.now();
+        updateChain();
+        renderList();
+        showDetails(it.id);
+      });
+    }
+    function updateChain(){
+      section.topics = data;
+      const entryIndex = subject.entries.findIndex(e => e.id === entryId);
+      subject.entries[entryIndex].sections = entry.sections;
+      const subjectIndex = allData.findIndex(s => s.id === subjectId);
+      allData[subjectIndex] = subject;
+      save(allData);
+    }
+    // ------------------ modal operations ------------------
+    function openModalFor(id){
+      modal.style.display='flex';
+      if(id){
+        modalTitle.textContent='টপিক সম্পাদনা করুন';
+        deleteBtn.style.display='inline-block';
+        const it = data.find(d=>d.id===id);
+        topicForm.title.value = it.title;
+        topicForm.startDate.value = it.startDate || '';
+        topicForm.doneDate.value = it.doneDate || '';
+        topicForm.status.value = it.status;
+        topicForm.notes.value = it.notes || '';
+        topicForm.revisions.value = it.revisions ? it.revisions.join(', ') : '';
+        deleteBtn.onclick = ()=>{ 
+          if(confirm('মুছে ফেলতে চান?')){
+            data = data.filter(x=>x.id!==id);
+            updateChain();
+            selectedId=null;
+            renderList();
+            detailsEl.innerHTML='<h3>নির্বাচিত টপিক নেই</h3><p class="muted">কোনো টপিক নির্বাচন করুন তখন বিস্তারিত এখানে দেখাবে।</p>';
+            closeModalAction();
+          }
+        };
+        topicForm.onsubmit = (e)=>{
+          e.preventDefault();
+          it.title = topicForm.title.value;
+          it.startDate = topicForm.startDate.value;
+          it.doneDate = topicForm.doneDate.value;
+          it.status = topicForm.status.value;
+          it.notes = topicForm.notes.value;
+          const revStr = topicForm.revisions.value.trim();
+          it.revisions = revStr ? revStr.split(',').map(r => r.trim()).filter(r => r) : [];
+          it.updated = Date.now();
+          updateChain();
+          renderList();
+          showDetails(it.id);
+          closeModalAction();
+        };
+      } else {
+        modalTitle.textContent='নতুন টপিক যোগ করুন';
+        deleteBtn.style.display='none';
+        topicForm.reset();
+        topicForm.status.value = 'running';
+        topicForm.onsubmit = (e)=>{
+          e.preventDefault();
+          const newItem = {
+            id: genId(),
+            title: topicForm.title.value,
+            startDate: topicForm.startDate.value,
+            doneDate: topicForm.doneDate.value,
+            status: topicForm.status.value,
+            notes: topicForm.notes.value,
+            revisions: [],
+            updated: Date.now()
+          };
+          const revStr = topicForm.revisions.value.trim();
+          if(revStr) {
+            newItem.revisions = revStr.split(',').map(r => r.trim()).filter(r => r);
+          }
+          data.unshift(newItem);
+          updateChain();
+          renderList();
+          selectedId=newItem.id;
+          showDetails(newItem.id);
+          closeModalAction();
+        };
+      }
+    }
+    function closeModalAction(){ modal.style.display='none'; }
+    // ------------------ events ------------------
+    addBtn.addEventListener('click', ()=>openModalFor());
+    closeModal.addEventListener('click', closeModalAction);
+    qEl.addEventListener('input', renderList);
+    filterStatusEl.addEventListener('change', renderList);
+    sortByEl.addEventListener('change', renderList);
+    // ------------------ util ------------------
+    function timeAgo(ts){
+      if(!ts) return '—';
+      const s = Math.floor((Date.now()-ts)/1000);
+      if(s<60) return s+'s ago';
+      if(s<3600) return Math.floor(s/60)+'m ago';
+      if(s<86400) return Math.floor(s/3600)+'h ago';
+      return Math.floor(s/86400)+'d ago';
+    }
+    function escapeHtml(str){
+      if(!str) return '';
+      return str.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');
+    }
+    // initial render
+    renderList();
   </script>
 </body>
 </html>
+```
